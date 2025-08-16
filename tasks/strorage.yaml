@@ -1,0 +1,10 @@
+---
+
+- name: built zfs-based dataset for vms and and isos
+  ansible.builtin.shell:
+    cmd: |
+      zpool create tank raidz "${devices[@]}"
+      zfs set compression=lz4 tank
+      zfs create tank/data
+
+      pvesm add zfspool pool/vmdata -pool tank/data

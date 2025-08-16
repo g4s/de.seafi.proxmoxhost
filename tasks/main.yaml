@@ -1,0 +1,31 @@
+---
+
+- name: manage repos
+  # ensure enterprise repo is removed and community repo is loaded
+  block:
+  - ansible.builtin.apt_repository:
+    repo: deb https://enterprise.proxmox.com/debian/pve {{ debian_version }} pve-enterprise
+    state: absent
+    filename: pve-enterprise
+
+  - ansible.builtin.apt_repository:
+    repo: deb http://download.proxmox.com/debian/pve {{ debian_version }} pve-no-subscription
+    state: present
+    filename: pve-no-subscription
+  become: true
+  notify:
+  - update package cache
+  - update system
+
+- name: ensue proxmoxer is present on system
+  ansible.builtin.pip:
+    name: "{ item }"
+    state: latest
+  loop:
+  - "requests"
+  - "paramiko"
+  become: true
+
+# building storage pool for images etc.
+- ansible.builtin.include_tasks:
+    file: "./storage.yaml"
