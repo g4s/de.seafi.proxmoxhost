@@ -13,4 +13,4 @@ auto tmfifo_net0.{[ vid.id }}
 
 auto vmbr0 inet dhcp
     bridge_ports {%for vid in H_NETWORK_VIDS %}tminfo_net0.{{ vid.id }} {% endfor %}
-    bridge_waitport 
+    bridge_waitport 0
