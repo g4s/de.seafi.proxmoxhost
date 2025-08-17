@@ -29,3 +29,24 @@
 # building storage pool for images etc.
 - ansible.builtin.include_tasks:
     file: "./storage.yaml"
+
+#####
+# adding cluster management tasks
+#####
+- name: initialize new cluster
+  ansible.builtin.command: "pvecm create {{ pve_data_center_name }}"
+  become: true
+  when: (pve_mode == "standalone") and ( pve_date_center_init | default(False) )
+  tags:
+  - clusterMgmt
+
+# adding node to datacenter, when enabled with pve_mode
+# this step can be configure over the variables
+#  - pve_mode (for adding node to a cluster it should be "cluster")
+#  - pve_data_center (IP or hostname of the cluster master)
+- name: adding node to datacenter
+  ansible.builtin.command: "pvecm add {{ pve_data_center }}"
+  become: true
+  when: ( pve_mode == "cluster" | defaults("standalone") ) and ( pve_data_center is defined )
+  tags:
+  - clusterMgmt
