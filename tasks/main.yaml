@@ -27,8 +27,10 @@
   become: true
 
 # building storage pool for images etc.
-- ansible.builtin.include_tasks:
-    file: "./storage.yaml"
+- ansible.builtin.import_tasks: storage.yaml
+
+# ensure network will be configured
+- ansible.builtin.include_tasks: network.yaml
 
 #####
 # adding cluster management tasks

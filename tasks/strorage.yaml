@@ -1,10 +1,28 @@
 ---
 
-- name: built zfs-based dataset for vms and and isos
-  ansible.builtin.shell:
-    cmd: |
-      zpool create tank raidz "${devices[@]}"
-      zfs set compression=lz4 tank
-      zfs create tank/data
+- name: identify disks for local zpool-storage
+  # create a list for the local raidZ1 by disksize (pve_disk_size)
+  # pve_disk_size expects an value in GB
+  ansible.builtin.shell: |
+    size=${size} * 1000000000
+    lsblk -nb --filter 'TYPE == "disk' | awk '$4>"${size}"' | awk '{ print $1 }'
+  environment:
+    size: pve_disk_filterbysize
+  register: storage_devs
+  when: pve_storage_mode == "local-zpool"
+  tags:
+  - storage
 
-      pvesm add zfspool pool/vmdata -pool tank/data
+- name: built zfs-based dataset for vms and and isos
+  ansible.builtin.shell: |
+    zpool create tank raidz "${devs[@]}"
+    zfs set compression=lz4 tank
+    zfs create tank/data
+
+    pvesm add zfspool pool/vmdata -pool tank/data
+  environment:
+    devs: storage_devs.stdout_lines
+  beome: true
+  when: pve_storage_mode == "local-zpool"
+  tags:
+  - storage

@@ -1,0 +1,30 @@
+# subtasks for managing the network on pve hosts
+# this tasks also respects the presence of BlueField DPUs. If a BlueField DPU
+# is recognized the ansible role expects, that the DPU is used as a NIC
+---
+
+- name: check if BlueField DPU is installed on host
+  ansible.builtin.shell: |
+    if [[ $(lspci | grep -i nox | grep -q "BlueField") ]]; then
+       echo True
+       exit 0
+    fi
+  register: dpu_installed
+
+- name: set BlueField DPU as primary NIC for VMs
+  # The virtual DPU ethernet port is accessable under tmfifo_netX
+  block:
+  - ansibe.builtin.template:
+      src: bluefiled-network.j2
+      dest: /etc/network/interfaces
+    when: dpu_installed.rc == 0
+
+  - ansible.builtin.template:
+      src: bluefiled-network-vlan.j2
+      dest: /etc/network/interfaces
+    when: ( dpu_installed.rc == 0 ) and ( H_NETWORK_VIDS is defined )
+  becom: True
+  notify:
+  - apply network changes
+  tags:
+  - network

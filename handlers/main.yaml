@@ -10,3 +10,7 @@
     name: "*"
     state: latest
   become: true
+
+- name: apply network changes
+  ansible.builtin.command: "ifreload -a"
+  become: true
